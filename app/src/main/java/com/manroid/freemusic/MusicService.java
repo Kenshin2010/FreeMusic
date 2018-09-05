@@ -1,51 +1,54 @@
 package com.manroid.freemusic;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ContentUris;
 import android.content.Intent;
-import android.content.res.AssetFileDescriptor;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
+
 
 public class MusicService extends Service implements
         MediaPlayer.OnPreparedListener,
         MediaPlayer.OnBufferingUpdateListener,
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnSeekCompleteListener,
+        MediaPlayer.OnInfoListener,
         MediaPlayer.OnCompletionListener {
 
-
-    public static final String ACTION_BOO = "com.manroid.freemusic.action.BOO";
-    private MediaPlayer mMediaPlayer;
-    private boolean CanDo = true;
-    private int mPosition = 0;
-    private ArrayList<Integer> mPlaylistNum;
-    private ArrayList<String> mPlaylist;
-    private boolean Flag = true;
-    private String mMusicTitleOld;
-
+    private Song song;
+    private boolean shuffle = false;
+    private MediaPlayer mediaPlayer;
+    private List<Song> listSong;
+    private int songPosition;
+    private final IBinder iBinder = new LocalBinder();
+    private int NOTIFY_ID = 100;
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return iBinder;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        songPosition = 0;
+        initMediaPlayer();
 
-        mMediaPlayer = new MediaPlayer();
-        mMediaPlayer.setOnPreparedListener(this);
-        mMediaPlayer.setOnBufferingUpdateListener(this);
-        mMediaPlayer.setOnErrorListener(this);
-        mMediaPlayer.setOnSeekCompleteListener(this);
-        mMediaPlayer.setOnCompletionListener(this);
+    }
 
-
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
     }
 
     @Override
@@ -55,12 +58,11 @@ public class MusicService extends Service implements
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        if (mPosition == (mPlaylistNum.size() - 1)) {
-            mPosition = 0;
-        } else {
-            mPosition++;
-        }
-        startNewMusic(mPlaylist.get(mPosition), mPosition);
+    }
+
+    @Override
+    public boolean onInfo(MediaPlayer mp, int what, int extra) {
+        return false;
     }
 
     @Override
@@ -70,9 +72,27 @@ public class MusicService extends Service implements
 
     @Override
     public void onPrepared(MediaPlayer mp) {
+        //start playback
         mp.start();
-        CanDo = true;
-        sendBroadcast(new Intent(MusicService.ACTION_BOO).putExtra(MainActivity.UPDATE_ICON, 8));
+        //notification
+        Intent notIntent = new Intent(this, MainActivity.class);
+        notIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendInt = PendingIntent.getActivity(this, 0,
+                notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Notification.Builder builder = new Notification.Builder(this);
+
+        builder.setContentIntent(pendInt)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setTicker("test ticker")
+                .setOngoing(true)
+                .setContentTitle("Playing")
+                .setContentText("test content text");
+        Notification not = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+            not = builder.build();
+        }
+        startForeground(NOTIFY_ID, not);
 
     }
 
@@ -81,26 +101,90 @@ public class MusicService extends Service implements
 
     }
 
+    public void initMediaPlayer() {
+        if (mediaPlayer == null)
+            mediaPlayer = new MediaPlayer();//new MediaPlayer instance
 
-    private void startNewMusic(String musicFileName, int position) {
-        Flag = true;
+        //Set up MediaPlayer event listeners
+        mediaPlayer.setOnCompletionListener(this);
+        mediaPlayer.setOnErrorListener(this);
+        mediaPlayer.setOnPreparedListener(this);
+        mediaPlayer.setOnBufferingUpdateListener(this);
+        mediaPlayer.setOnSeekCompleteListener(this);
+        mediaPlayer.setOnInfoListener(this);
+    }
+
+    public void playSong(Song song) {
+        //Reset so that the MediaPlayer is not pointing to another data source
+        mediaPlayer.reset();
+        long currentSongId = song.getID();
+        Uri trackUri = ContentUris.withAppendedId(
+                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                currentSongId);
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
-            mMediaPlayer.reset();
-            mMusicTitleOld = musicFileName;
-            AssetFileDescriptor afd = am.openFd("music/" + musicFileName);
-            mMediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            mMediaPlayer.prepare();
+            // Set the data source to the mediaFile location
+            mediaPlayer.setDataSource(getApplicationContext(), trackUri);
         } catch (IOException e) {
             e.printStackTrace();
+            stopSelf();
         }
-        mMusicName = ((ItemMusicList) mMusicList.get(position)).getMusicTitle();
-        mMusicArtist = ((ItemMusicList) mMusicList.get(position)).getSinger();
-        //TODO只有播放新音乐的时候，需要设置新名字并更新！
-
-        sendBroadcast(new Intent(MusicService.ACTION_BOO)
-                .putExtra(MainActivity.UPDATE_ICON, 1)
-                .putExtra(MusicService.UPDATE_MUSIC_NAME,mNamelist.get(mPosition))
-                .putExtra(MusicService.UPDATE_MUSIC_SINGER,mSingerlist.get(mPosition))
-        );
+        mediaPlayer.prepareAsync();
     }
+
+    public void pause() {
+
+    }
+
+    public void resume() {
+
+    }
+
+    public void next() {
+
+    }
+
+    public void prev() {
+
+    }
+
+    public boolean isPlayingSong() {
+        return false;
+    }
+
+    public int getDuration() {
+        return 0;
+    }
+
+    public int getTotalTime() {
+        return 0;
+    }
+
+    public void setShuffle() {
+        if (shuffle) shuffle = !shuffle;
+        else shuffle = !shuffle;
+    }
+
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        stopForeground(true);
+    }
+
+    //release resources when unbind
+    @Override
+    public boolean onUnbind(Intent intent){
+        mediaPlayer.stop();
+        mediaPlayer.release();
+        return false;
+    }
+
+    public class LocalBinder extends Binder {
+        public MusicService getService() {
+            // Return this instance of LocalService so clients can call public methods
+            return MusicService.this;
+        }
+    }
+
 }

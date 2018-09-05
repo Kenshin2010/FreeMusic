@@ -45,7 +45,7 @@ public class SplashActivity extends AppCompatActivity {
         switch (requestCode) {
             case PERMISSION_REQUEST_CODE:
                 if (grantResults.length > 0) {
-                    boolean readExternalStorage = grantResults[3] == PackageManager.PERMISSION_GRANTED;
+                    boolean readExternalStorage = grantResults[0] == PackageManager.PERMISSION_GRANTED;
                     if (readExternalStorage) {
                         startActivity(MainActivity.class);
                     } else {

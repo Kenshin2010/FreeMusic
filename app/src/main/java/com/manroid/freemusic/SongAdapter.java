@@ -1,57 +1,60 @@
 package com.manroid.freemusic;
 
-import android.content.Context;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.ArrayList;
+import java.util.List;
 
-public class SongAdapter extends BaseAdapter {
+public class SongAdapter extends RecyclerView.Adapter<SongAdapter.RecyclerViewHolder> {
 
-    //song list and layout
-    private ArrayList<Song> songs;
-    private LayoutInflater songInf;
+    private List<Song> data;
+    private OnClickSong onClickSong;
 
-    //constructor
-    public SongAdapter(Context c, ArrayList<Song> theSongs) {
-        songs = theSongs;
-        songInf = LayoutInflater.from(c);
+    public SongAdapter(List<Song> data, OnClickSong onClickSong) {
+        this.data = data;
+        this.onClickSong = onClickSong;
     }
 
     @Override
-    public int getCount() {
-        return songs.size();
+    public RecyclerViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        View view = inflater.inflate(R.layout.item_song, parent, false);
+        return new RecyclerViewHolder(view);
     }
 
     @Override
-    public Object getItem(int arg0) {
-        return null;
+    public void onBindViewHolder(RecyclerViewHolder holder, int position) {
+        Song currSong = data.get(position);
+        holder.songView.setText(currSong.getTitle());
+        holder.artistView.setText(currSong.getArtist());
     }
 
     @Override
-    public long getItemId(int arg0) {
-        return 0;
+    public int getItemCount() {
+        return data.size();
     }
 
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        //map to song layout
-        LinearLayout songLay = (LinearLayout) songInf.inflate
-                (R.layout.item_song, parent, false);
-        //get title and artist views
-        TextView songView = (TextView) songLay.findViewById(R.id.song_title);
-        TextView artistView = (TextView) songLay.findViewById(R.id.song_artist);
-        //get song using position
-        Song currSong = songs.get(position);
-        //get title and artist strings
-        songView.setText(currSong.getTitle());
-        artistView.setText(currSong.getArtist());
-        //set position as tag
-        songLay.setTag(position);
-        return songLay;
+
+    class RecyclerViewHolder extends RecyclerView.ViewHolder {
+
+        TextView songView;
+        TextView artistView;
+
+        RecyclerViewHolder(View itemView) {
+            super(itemView);
+            songView = (TextView) itemView.findViewById(R.id.song_title);
+            artistView = (TextView) itemView.findViewById(R.id.song_artist);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onClickSong.onPickSong(getLayoutPosition());
+                }
+            });
+
+        }
     }
 }

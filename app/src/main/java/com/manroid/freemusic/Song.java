@@ -5,6 +5,7 @@ public class Song {
     private long id;
     private String title;
     private String artist;
+    private String data;
 
     public Song(long songID, String songTitle, String songArtist){
         id=songID;
