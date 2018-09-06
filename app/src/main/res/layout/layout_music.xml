@@ -2,15 +2,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#781313"
+    android:background="@drawable/custom_background"
     android:orientation="vertical">
 
 
     <LinearLayout
         android:id="@+id/control_panel"
-        android:gravity="center_vertical"
         android:layout_width="match_parent"
         android:layout_height="30dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <TextView
@@ -25,51 +25,72 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:indeterminate="false"/>
+            android:indeterminate="false" />
 
         <TextView
             android:id="@+id/timeline_all"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingRight="20dp"
-            android:text="00:00"/>
+            android:text="00:00" />
     </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/control_button"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content">
 
-        <Button
-            android:id="@+id/play_previous"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginBottom="20dp"
-            android:layout_width="0dp"
-            android:text="prev"
-            android:layout_weight="1"
-            android:layout_height="50dp" />
+        <ImageView
+            android:id="@+id/repeat"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="30dp"
+            android:background="@drawable/repeat1" />
 
-        <Button
-            android:id="@+id/play_pause"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginBottom="20dp"
-            android:layout_width="0dp"
-            android:text="play"
-            android:layout_weight="1"
-            android:layout_height="50dp" />
 
-        <Button
-            android:id="@+id/play_next"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginBottom="20dp"
-            android:layout_width="0dp"
-            android:text="next"
-            android:layout_weight="1"
-            android:layout_height="50dp" />
-    </LinearLayout>
+        <LinearLayout
+            android:layout_centerInParent="true"
+            android:gravity="center_vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/play_previous"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_marginRight="10dp"
+                android:layout_centerVertical="true"
+                android:background="@drawable/custom_action_prev" />
+
+            <ImageView
+                android:id="@+id/play_pause"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:layout_centerVertical="true"
+                android:background="@drawable/custom_action_play" />
+
+            <ImageView
+                android:id="@+id/play_next"
+                android:layout_marginLeft="10dp"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_centerVertical="true"
+                android:background="@drawable/custom_action_next" />
+
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/shuffle"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginRight="30dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/shuffle1" />
+
+
+    </RelativeLayout>
 
 </LinearLayout>

@@ -13,7 +13,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity implements
     private Intent serviceIntent;
     private ServiceConnection musicConnection;
     private BroadcastReceiver broadcastReceiver;
-    private Button btnPlayPause, btnPrev, btnNext;
+    private ImageView btnPlayPause, btnPrev, btnNext;
     private boolean showRemainingTime = false;
     private boolean pollingThreadRunning;
     private static final int POLLING_INTERVAL = 450;
@@ -72,9 +72,9 @@ public class MainActivity extends AppCompatActivity implements
         tvTimelineAll = (TextView) findViewById(R.id.timeline_all);
         tvTimelineNow = (TextView) findViewById(R.id.timeline_now);
         songView = (RecyclerView) findViewById(R.id.song_list);
-        btnPlayPause = (Button) findViewById(R.id.play_pause);
-        btnNext = (Button) findViewById(R.id.play_next);
-        btnPrev = (Button) findViewById(R.id.play_previous);
+        btnPlayPause = (ImageView) findViewById(R.id.play_pause);
+        btnNext = (ImageView) findViewById(R.id.play_next);
+        btnPrev = (ImageView) findViewById(R.id.play_previous);
         songList = new ArrayList<Song>();
         songAdapter = new SongAdapter(songList, this);
         songView.setLayoutManager(new LinearLayoutManager(this));
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onPickSong(int pos) {
-        btnPlayPause.setText("Pause");
+        btnPlayPause.setBackgroundResource(R.drawable.custom_action_pause);
         musicService.playSong(songList.get(pos));
     }
 
@@ -158,10 +158,10 @@ public class MainActivity extends AppCompatActivity implements
             musicService.playPause();
             if (musicService.isPlayingSong()) {
                 updatePosition();
-                btnPlayPause.setText("pause");
+                btnPlayPause.setBackgroundResource(R.drawable.custom_action_pause);
                 startPollingThread();
             } else {
-                btnPlayPause.setText("play");
+                btnPlayPause.setBackgroundResource(R.drawable.custom_action_play);
                 stopPollingThread();
                 updatePosition();
             }
