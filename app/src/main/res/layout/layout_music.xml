@@ -1,25 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:background="#781313"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/music_playing_title"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:ellipsize="end"
-        android:gravity="center_horizontal"
-        android:maxLines="1"
-        android:padding="8dp"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="?android:attr/textColorPrimary"/>
 
     <LinearLayout
         android:id="@+id/control_panel"
+        android:gravity="center_vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="30dp"
         android:orientation="horizontal">
 
         <TextView
@@ -27,8 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingLeft="20dp"
-            android:text="00:00"
-            />
+            android:text="00:00" />
 
         <SeekBar
             android:id="@+id/timeline_seek_bar"

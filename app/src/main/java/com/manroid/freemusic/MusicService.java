@@ -1,14 +1,19 @@
 package com.manroid.freemusic;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 
@@ -22,15 +27,22 @@ public class MusicService extends Service implements
         MediaPlayer.OnErrorListener,
         MediaPlayer.OnSeekCompleteListener,
         MediaPlayer.OnInfoListener,
+        AudioManager.OnAudioFocusChangeListener,
         MediaPlayer.OnCompletionListener {
 
-    private Song song;
-    private boolean shuffle = false;
+
+    private Song currentsong;
     private MediaPlayer mediaPlayer;
     private List<Song> listSong;
     private int songPosition;
     private final IBinder iBinder = new LocalBinder();
     private int NOTIFY_ID = 100;
+    private AudioManager audioManager;
+    private BroadcastReceiver broadcastReceiver;
+    private NotificationManager notificationManager;
+    private Notification notification;
+    private PendingIntent pendingIntent;
+    private boolean shuffle, repeat, repeatAll;
 
     @Nullable
     @Override
@@ -41,15 +53,54 @@ public class MusicService extends Service implements
     @Override
     public void onCreate() {
         super.onCreate();
-        songPosition = 0;
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), PendingIntent.FLAG_UPDATE_CURRENT);
+        updateNotificationMessage();
         initMediaPlayer();
 
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (requestAudioFocus() == false) {
+            stopSelf();
+        }
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Constants.ACTION_PREVIOUS);
+        intentFilter.addAction(Constants.ACTION_PLAY_PAUSE);
+        intentFilter.addAction(Constants.ACTION_NEXT);
+        intentFilter.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                switch (action) {
+//                    case "quit":
+//                        // do something
+//                        return;
+//                    case Constants.ACTION_PREVIOUS:
+//                        prevSong();
+//                        break;
+//                    case Constants.ACTION_PLAY_PAUSE:
+//                        break;
+//                    case Constants.ACTION_NEXT:
+//                        break;
+//                    case AudioManager.ACTION_AUDIO_BECOMING_NOISY:
+//                        break;
+                }
+            }
+        };
+
+        registerReceiver(broadcastReceiver, intentFilter);
+
+
+        startForeground(Constants.NOTIFICATION_MAIN, notification);
+
+
         return START_STICKY;
     }
+
 
     @Override
     public void onBufferingUpdate(MediaPlayer mp, int percent) {
@@ -58,6 +109,7 @@ public class MusicService extends Service implements
 
     @Override
     public void onCompletion(MediaPlayer mp) {
+        nextSongType();
     }
 
     @Override
@@ -77,22 +129,23 @@ public class MusicService extends Service implements
         //notification
         Intent notIntent = new Intent(this, MainActivity.class);
         notIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent pendInt = PendingIntent.getActivity(this, 0,
-                notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        Notification.Builder builder = new Notification.Builder(this);
-
-        builder.setContentIntent(pendInt)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setTicker("test ticker")
-                .setOngoing(true)
-                .setContentTitle("Playing")
-                .setContentText("test content text");
-        Notification not = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-            not = builder.build();
-        }
-        startForeground(NOTIFY_ID, not);
+//        PendingIntent pendInt = PendingIntent.getActivity(this, 0,
+//                notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+//
+//        Notification.Builder builder = new Notification.Builder(this);
+//
+//        builder.setContentIntent(pendInt)
+//                .setSmallIcon(R.mipmap.ic_launcher)
+//                .setTicker("test ticker")
+//                .setOngoing(true)
+//                .setContentTitle("Playing")
+//                .setContentText("test content text");
+//        Notification not = null;
+//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+//            not = builder.build();
+//        }
+//        startForeground(NOTIFY_ID, not);
+        updateNotificationMessage();
 
     }
 
@@ -115,24 +168,43 @@ public class MusicService extends Service implements
     }
 
     public void playSong(Song song) {
-        //Reset so that the MediaPlayer is not pointing to another data source
+        currentsong = song;
         mediaPlayer.reset();
-        long currentSongId = song.getID();
-        Uri trackUri = ContentUris.withAppendedId(
-                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                currentSongId);
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mediaPlayer.setOnCompletionListener(null);
         try {
-            // Set the data source to the mediaFile location
+            long currentSongId = song.getID();
+            Uri trackUri = ContentUris.withAppendedId(
+                    android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    currentSongId);
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mediaPlayer.setDataSource(getApplicationContext(), trackUri);
-        } catch (IOException e) {
-            e.printStackTrace();
-            stopSelf();
+            try {
+                mediaPlayer.prepare();
+            } catch (IOException e) {
+                currentsong = null;
+            }
+            mediaPlayer.setOnCompletionListener(this);
+            mediaPlayer.start();
+            sendBroadcast(new Intent(Constants.ACTION_NEW_SONG)); // Sends a broadcast to the activity
+
+        } catch (Exception e) {
+            currentsong = null;
+            updateNotificationMessage();
+            sendBroadcast(new Intent(Constants.ACTION_NEW_SONG)); // Sends a broadcast to the activity
         }
-        mediaPlayer.prepareAsync();
     }
 
-    public void pause() {
+    public void playPause() {
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+        } else {
+            mediaPlayer.start();
+        }
+        updateNotificationMessage();
+        sendBroadcast(new Intent(Constants.ACTION_PLAY_PAUSE));
+    }
+
+    public void pauseSong() {
 
     }
 
@@ -140,25 +212,29 @@ public class MusicService extends Service implements
 
     }
 
-    public void next() {
+    public void nextSong() {
 
     }
 
-    public void prev() {
+    public void prevSong() {
 
     }
 
     public boolean isPlayingSong() {
-        return false;
+        if (currentsong == null) return false;
+        return mediaPlayer.isPlaying();
     }
 
     public int getDuration() {
-        return 0;
+        if (currentsong == null) return 100;
+        return mediaPlayer.getDuration();
     }
 
-    public int getTotalTime() {
-        return 0;
+    public int getCurrentPosition() {
+        if (currentsong == null) return 0;
+        return mediaPlayer.getCurrentPosition();
     }
+
 
     public void setShuffle() {
         if (shuffle) shuffle = !shuffle;
@@ -166,18 +242,88 @@ public class MusicService extends Service implements
     }
 
 
+    public Song getCurrentsong() {
+        return currentsong;
+    }
+
+
+    public void nextSongType() {
+        if (currentsong == null) {
+            return;
+        }
+
+        if (repeat) {
+            playSong(currentsong);
+            return;
+        }
+
+        if (shuffle) {
+//            randomItem();
+            return;
+        }
+
+        Song nextItem = currentsong.getNext(repeatAll);
+        if (nextItem == null) {
+            if (!isPlayingSong()) ;
+            sendBroadcast(new Intent(Constants.ACTION_NEW_SONG)); // Notify the activity that there are no more songs to be played
+            updateNotificationMessage();
+        } else {
+            playSong(nextItem);
+        }
+    }
+
+    public void seekTo(int progress) {
+        mediaPlayer.seekTo(progress);
+        sendPlayingStateBroadcast();
+    }
+
+    private void sendPlayingStateBroadcast() {
+        Intent intent = new Intent();
+        intent.setAction(Constants.ACTION_PLAY_STATE_CHANGE);
+        Bundle bundle = new Bundle();
+        bundle.putLong("duration", mediaPlayer.getDuration());
+        bundle.putLong("position", mediaPlayer.getCurrentPosition());
+        bundle.putBoolean("playing", mediaPlayer.isPlaying());
+        intent.putExtras(bundle);
+        sendBroadcast(intent);
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         stopForeground(true);
+        unregisterReceiver(broadcastReceiver);
+        removeAudioFocus();
     }
 
     //release resources when unbind
     @Override
-    public boolean onUnbind(Intent intent){
+    public boolean onUnbind(Intent intent) {
         mediaPlayer.stop();
         mediaPlayer.release();
         return false;
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        switch (focusChange) {
+            case AudioManager.AUDIOFOCUS_GAIN:
+                if (mediaPlayer == null) initMediaPlayer();
+                else if (!mediaPlayer.isPlaying()) mediaPlayer.start();
+                mediaPlayer.setVolume(1.0f, 1.0f);
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS:
+                if (mediaPlayer.isPlaying()) mediaPlayer.stop();
+                mediaPlayer.release();
+                mediaPlayer = null;
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                if (mediaPlayer.isPlaying()) mediaPlayer.pause();
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                if (mediaPlayer.isPlaying()) mediaPlayer.setVolume(0.1f, 0.1f);
+                break;
+        }
     }
 
     public class LocalBinder extends Binder {
@@ -186,5 +332,34 @@ public class MusicService extends Service implements
             return MusicService.this;
         }
     }
+
+
+    private boolean requestAudioFocus() {
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            //Focus gained
+            return true;
+        }
+        //Could not gain focus
+        return false;
+    }
+
+    private boolean removeAudioFocus() {
+        return AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
+                audioManager.abandonAudioFocus(this);
+    }
+
+
+    private void updateNotificationMessage() {
+        Notification.Builder notificationBuilder = new Notification.Builder(this);
+        notificationBuilder.setSmallIcon(R.mipmap.ic_launcher);
+        notificationBuilder.setContentIntent(pendingIntent);
+        notificationBuilder.setOngoing(true);
+        notificationBuilder.setContentTitle(getResources().getString(R.string.app_name));
+        notification = notificationBuilder.build();
+        notificationManager.notify(Constants.NOTIFICATION_MAIN, notification);
+    }
+
 
 }

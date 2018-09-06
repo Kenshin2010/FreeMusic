@@ -1,0 +1,4 @@
+https://github.com/valdio/AudioPlayer/blob/master/app/src/main/java/com/valdioveliu/valdio/audioplayer/MediaPlayerService.java
+https://github.com/SueSmith/android-music-player/blob/master/src/com/example/musicplayer/MusicService.java
+https://github.com/andreadec/MusicPlayer.git
+https://github.com/TheAndroidMaster/Pasta-Music.git
