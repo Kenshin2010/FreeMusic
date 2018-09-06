@@ -1,10 +1,14 @@
-package com.manroid.freemusic;
+package com.manroid.freemusic.adapter;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.manroid.freemusic.R;
+import com.manroid.freemusic.model.Song;
+import com.manroid.freemusic.interfaces.OnClickSong;
 
 import java.util.List;
 

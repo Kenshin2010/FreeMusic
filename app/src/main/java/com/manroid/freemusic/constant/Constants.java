@@ -1,4 +1,4 @@
-package com.manroid.freemusic;
+package com.manroid.freemusic.constant;
 
 public class Constants {
 

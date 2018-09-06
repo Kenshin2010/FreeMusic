@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:background="#FF330000"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".view.activity.MainActivity">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/song_list"

@@ -1,4 +1,4 @@
-package com.manroid.freemusic;
+package com.manroid.freemusic.util;
 
 public class Utils {
 

@@ -1,6 +1,7 @@
-package com.manroid.freemusic;
+package com.manroid.freemusic.model;
 
-import java.util.ArrayList;
+import com.manroid.freemusic.view.activity.MainActivity;
+
 import java.util.List;
 
 public class Song {

@@ -1,14 +1,11 @@
-package com.manroid.freemusic;
+package com.manroid.freemusic.view.activity;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,9 +14,17 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
+import com.manroid.freemusic.constant.Constants;
+import com.manroid.freemusic.util.File;
+import com.manroid.freemusic.service.MusicService;
+import com.manroid.freemusic.interfaces.OnClickSong;
+import com.manroid.freemusic.R;
+import com.manroid.freemusic.model.Song;
+import com.manroid.freemusic.adapter.SongAdapter;
+import com.manroid.freemusic.util.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,21 +41,20 @@ public class MainActivity extends AppCompatActivity implements
     private SeekBar seekBar;
     private static ArrayList<Song> songList;
     private SongAdapter songAdapter;
-    public MusicService musicService; // The application service
+    public MusicService musicService;
     private Intent serviceIntent;
     private ServiceConnection musicConnection;
     private BroadcastReceiver broadcastReceiver;
     private Button btnPlayPause, btnPrev, btnNext;
     private boolean showRemainingTime = false;
-    private boolean pollingThreadRunning; // true if thread is active, false otherwise
-    private static final int POLLING_INTERVAL = 450; // Refresh time of the seekbar
+    private boolean pollingThreadRunning;
+    private static final int POLLING_INTERVAL = 450;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         initView();
         initData();
         initEvent();
@@ -71,7 +75,6 @@ public class MainActivity extends AppCompatActivity implements
         btnPlayPause = (Button) findViewById(R.id.play_pause);
         btnNext = (Button) findViewById(R.id.play_next);
         btnPrev = (Button) findViewById(R.id.play_previous);
-
         songList = new ArrayList<Song>();
         songAdapter = new SongAdapter(songList, this);
         songView.setLayoutManager(new LinearLayoutManager(this));
@@ -101,9 +104,8 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onStart() {
         super.onStart();
-        // The service is bound to this activity
         if (musicService == null) {
-            startService(serviceIntent); // Starts the service if it is not running
+            startService(serviceIntent);
             createMusicConnection();
             bindService(serviceIntent, musicConnection, Context.BIND_AUTO_CREATE);
         }
@@ -127,12 +129,8 @@ public class MainActivity extends AppCompatActivity implements
 
             }
         };
+
         registerReceiver(broadcastReceiver, intentFilter);
-        updatePlayPauseButton();
-    }
-
-    private void updatePlayPauseButton() {
-
     }
 
     private void createMusicConnection() {
@@ -151,17 +149,6 @@ public class MainActivity extends AppCompatActivity implements
 
     public static List<Song> getListSong() {
         return songList;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (musicService != null) {
-            unbindService(musicConnection);
-            musicService.stopSelf();
-            unregisterReceiver(broadcastReceiver);
-            stopPollingThread();
-        }
     }
 
     @Override
@@ -185,14 +172,6 @@ public class MainActivity extends AppCompatActivity implements
         }
 
     }
-//
-//    private void updatePlayingSong() {
-//        Song song = musicService.getCurrentsong();
-//        if (song != null) {
-//
-//        }
-//    }
-
 
     private void updatePosition() {
         int progress = musicService.getCurrentPosition();
@@ -203,9 +182,6 @@ public class MainActivity extends AppCompatActivity implements
         tvTimelineNow.setText(Utils.formatTime(progress));
     }
 
-    private void stopPollingThread() {
-        pollingThreadRunning = false;
-    }
 
     private void startPollingThread() {
         pollingThreadRunning = true;
@@ -228,16 +204,19 @@ public class MainActivity extends AppCompatActivity implements
         }.start();
     }
 
+    private void stopPollingThread() {
+        pollingThreadRunning = false;
+    }
+
+
     @Override
     public void onPause() {
         super.onPause();
-//        stopPollingThread(); // Stop the polling thread
-//        unregisterReceiver(broadcastReceiver); // Disable broadcast receiver
     }
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        if (fromUser) { // Event is triggered only if the seekbar position was modified by the user
+        if (fromUser) {
             if (seekBar.equals(seekBar)) {
                 musicService.seekTo(progress);
             }
@@ -253,5 +232,16 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
 
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (musicService != null) {
+            unbindService(musicConnection);
+            musicService.stopSelf();
+            unregisterReceiver(broadcastReceiver);
+            stopPollingThread();
+        }
     }
 }

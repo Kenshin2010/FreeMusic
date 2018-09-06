@@ -1,4 +1,4 @@
-package com.manroid.freemusic;
+package com.manroid.freemusic.service;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -16,6 +16,11 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+
+import com.manroid.freemusic.R;
+import com.manroid.freemusic.model.Song;
+import com.manroid.freemusic.constant.Constants;
+import com.manroid.freemusic.view.activity.MainActivity;
 
 import java.io.IOException;
 import java.util.List;
@@ -124,29 +129,10 @@ public class MusicService extends Service implements
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        //start playback
         mp.start();
-        //notification
         Intent notIntent = new Intent(this, MainActivity.class);
         notIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//        PendingIntent pendInt = PendingIntent.getActivity(this, 0,
-//                notIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-//
-//        Notification.Builder builder = new Notification.Builder(this);
-//
-//        builder.setContentIntent(pendInt)
-//                .setSmallIcon(R.mipmap.ic_launcher)
-//                .setTicker("test ticker")
-//                .setOngoing(true)
-//                .setContentTitle("Playing")
-//                .setContentText("test content text");
-//        Notification not = null;
-//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-//            not = builder.build();
-//        }
-//        startForeground(NOTIFY_ID, not);
         updateNotificationMessage();
-
     }
 
     @Override
@@ -156,9 +142,7 @@ public class MusicService extends Service implements
 
     public void initMediaPlayer() {
         if (mediaPlayer == null)
-            mediaPlayer = new MediaPlayer();//new MediaPlayer instance
-
-        //Set up MediaPlayer event listeners
+            mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.setOnErrorListener(this);
         mediaPlayer.setOnPreparedListener(this);
@@ -352,7 +336,6 @@ public class MusicService extends Service implements
 
     public class LocalBinder extends Binder {
         public MusicService getService() {
-            // Return this instance of LocalService so clients can call public methods
             return MusicService.this;
         }
     }
@@ -373,7 +356,6 @@ public class MusicService extends Service implements
         return AudioManager.AUDIOFOCUS_REQUEST_GRANTED ==
                 audioManager.abandonAudioFocus(this);
     }
-
 
     private void updateNotificationMessage() {
         Notification.Builder notificationBuilder = new Notification.Builder(this);
