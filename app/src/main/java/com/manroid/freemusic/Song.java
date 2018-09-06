@@ -29,4 +29,14 @@ public class Song {
         }
         return null;
     }
+
+    public Song getPrevious() {
+        List<Song> songs = MainActivity.getListSong();
+        int index = songs.indexOf(this);
+        if(index>0) {
+            return songs.get(index-1);
+        } else {
+            return null;
+        }
+    }
 }

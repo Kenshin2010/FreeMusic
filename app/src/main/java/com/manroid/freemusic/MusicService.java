@@ -272,6 +272,30 @@ public class MusicService extends Service implements
         }
     }
 
+    public void previousItem(boolean noRestart) {
+        if (currentsong == null) return;
+
+        if (!noRestart && getCurrentPosition() > 2000) {
+            playSong(currentsong);
+            return;
+        }
+
+        if (repeat) {
+            playSong(currentsong);
+            return;
+        }
+
+        if (shuffle) {
+//            randomItem();
+            return;
+        }
+
+        Song song= currentsong.getPrevious();
+        if (song != null) {
+            playSong(song);
+        }
+    }
+
     public void seekTo(int progress) {
         mediaPlayer.seekTo(progress);
         sendPlayingStateBroadcast();

@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements
     private Intent serviceIntent;
     private ServiceConnection musicConnection;
     private BroadcastReceiver broadcastReceiver;
-    private Button btnPlayPause;
+    private Button btnPlayPause, btnPrev, btnNext;
     private boolean showRemainingTime = false;
     private boolean pollingThreadRunning; // true if thread is active, false otherwise
     private static final int POLLING_INTERVAL = 450; // Refresh time of the seekbar
@@ -59,6 +59,8 @@ public class MainActivity extends AppCompatActivity implements
     private void initEvent() {
         seekBar.setOnSeekBarChangeListener(this);
         btnPlayPause.setOnClickListener(this);
+        btnNext.setOnClickListener(this);
+        btnPrev.setOnClickListener(this);
     }
 
     private void initView() {
@@ -67,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements
         tvTimelineNow = (TextView) findViewById(R.id.timeline_now);
         songView = (RecyclerView) findViewById(R.id.song_list);
         btnPlayPause = (Button) findViewById(R.id.play_pause);
+        btnNext = (Button) findViewById(R.id.play_next);
+        btnPrev = (Button) findViewById(R.id.play_previous);
 
         songList = new ArrayList<Song>();
         songAdapter = new SongAdapter(songList, this);
@@ -145,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements
         };
     }
 
-    public static List<Song> getListSong(){
+    public static List<Song> getListSong() {
         return songList;
     }
 
@@ -174,6 +178,10 @@ public class MainActivity extends AppCompatActivity implements
                 stopPollingThread();
                 updatePosition();
             }
+        }else if (v.getId() == R.id.play_next && musicService != null){
+            musicService.nextSongType();
+        }else {
+            musicService.previousItem(false);
         }
 
     }
