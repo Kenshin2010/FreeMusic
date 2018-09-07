@@ -1,4 +1,12 @@
 <resources>
     <string name="app_name">FreeMusic</string>
     <string name="please_update_permission">Vui lòng đồng ý quyền !!!</string>
+    <string name="play_pathData" translatable="false">M 4.94745,2 L 4.94745,24 L 43.05255,24 L 4.94745,2 Z  M 4.94745,24 L 4.94745,46 L 43.05255,24 L 4.94745,24 Z</string>
+    <string name="pause_pathData" translatable="false">M 4.94745,2 L 4.94745,46 L 21.526275,46 L 21.526275,2 Z  M 26.473725,2 L 26.473725,46 L 43.05255,46 L 43.05255,2 Z</string>
+    <string name="noSong">No song loaded</string>
+    <string name="quit">Quit</string>
+    <string name="previous">Previous</string>
+    <string name="pause">Pause</string>
+    <string name="next">Next</string>
+
 </resources>

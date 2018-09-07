@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="notificationImageSize">100dp</dimen>
+    <dimen name="notificationButtonsSize">50dp</dimen>
+    <dimen name="notificationButtonsPadding">5dp</dimen>
+    <dimen name="notificationQuitButtonSize">40dp</dimen>
+
+</resources>

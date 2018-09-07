@@ -6,7 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.IBinder;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -45,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements
     private Intent serviceIntent;
     private ServiceConnection musicConnection;
     private BroadcastReceiver broadcastReceiver;
-    private ImageView btnPlayPause, btnPrev, btnNext;
+    private ImageView btnPlayPause, btnPrev, btnNext, btnRepeat, btnShuffle;
     private boolean showRemainingTime = false;
     private boolean pollingThreadRunning;
     private static final int POLLING_INTERVAL = 450;
@@ -65,9 +67,12 @@ public class MainActivity extends AppCompatActivity implements
         btnPlayPause.setOnClickListener(this);
         btnNext.setOnClickListener(this);
         btnPrev.setOnClickListener(this);
+        btnRepeat.setOnClickListener(this);
+        btnShuffle.setOnClickListener(this);
     }
 
     private void initView() {
+
         seekBar = (SeekBar) findViewById(R.id.timeline_seek_bar);
         tvTimelineAll = (TextView) findViewById(R.id.timeline_all);
         tvTimelineNow = (TextView) findViewById(R.id.timeline_now);
@@ -75,6 +80,9 @@ public class MainActivity extends AppCompatActivity implements
         btnPlayPause = (ImageView) findViewById(R.id.play_pause);
         btnNext = (ImageView) findViewById(R.id.play_next);
         btnPrev = (ImageView) findViewById(R.id.play_previous);
+        btnRepeat = (ImageView) findViewById(R.id.repeat);
+        btnShuffle = (ImageView) findViewById(R.id.shuffle);
+
         songList = new ArrayList<Song>();
         songAdapter = new SongAdapter(songList, this);
         songView.setLayoutManager(new LinearLayoutManager(this));
@@ -95,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public void onPickSong(int pos) {
         btnPlayPause.setBackgroundResource(R.drawable.custom_action_pause);
@@ -116,16 +125,24 @@ public class MainActivity extends AppCompatActivity implements
         super.onResume();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Constants.ACTION_PLAY_PAUSE_CHANGE);
+        intentFilter.addAction(Constants.ACTION_PLAY_PAUSE);
         intentFilter.addAction(Constants.ACTION_NEW_SONG);
+        intentFilter.addAction(Constants.ACTION_QUIT_ACTIVITY);
         broadcastReceiver = new BroadcastReceiver() {
+            @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void onReceive(Context context, Intent intent) {
                 if (intent.getAction().equals(Constants.ACTION_NEW_SONG)) {
                     Log.d("FREE_MUSIC", "===============");
                     startPollingThread();
                 } else if (intent.getAction().equals(Constants.ACTION_PLAY_PAUSE_CHANGE)) {
-                    // dont some thing
+                    //dont something
+                }else if (intent.getAction().equals(Constants.ACTION_PLAY_PAUSE)) {
+                    updateLayoutPlayPause();
+                }else if (intent.getAction().equals(Constants.ACTION_QUIT_ACTIVITY)) {
+                    finish();
                 }
+
 
             }
         };
@@ -151,10 +168,22 @@ public class MainActivity extends AppCompatActivity implements
         return songList;
     }
 
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+    private void updateLayoutPlayPause(){
+        if (musicService.isPlayingSong()) {
+            btnPlayPause.setBackgroundResource(R.drawable.custom_action_pause);
+            startPollingThread();
+        } else {
+            btnPlayPause.setBackgroundResource(R.drawable.custom_action_play);
+            stopPollingThread();
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.play_pause && musicService != null) {
-            showRemainingTime = !showRemainingTime;
             musicService.playPause();
             if (musicService.isPlayingSong()) {
                 updatePosition();
@@ -167,8 +196,32 @@ public class MainActivity extends AppCompatActivity implements
             }
         }else if (v.getId() == R.id.play_next && musicService != null){
             musicService.nextSongType();
-        }else {
+        }else if (v.getId() == R.id.play_previous && musicService != null){
             musicService.previousItem(false);
+        }else if (v.getId() == R.id.shuffle && musicService != null){
+
+            boolean isShuffleSong = musicService.isShuffle();
+
+            if (!isShuffleSong){
+                musicService.setShuffle(!isShuffleSong);
+                btnShuffle.setBackgroundResource(R.drawable.custom_action_shuffle_2);
+            }else {
+                musicService.setShuffle(!isShuffleSong);
+                btnShuffle.setBackgroundResource(R.drawable.custom_action_shuffle);
+            }
+
+        }else if (v.getId() == R.id.repeat && musicService != null){
+
+            boolean isRepeatSong = musicService.isRepeat();
+
+            if (!isRepeatSong ){
+                musicService.setRepeat(!isRepeatSong );
+                btnRepeat.setBackgroundResource(R.drawable.custom_action_repeat_2);
+            }else {
+                musicService.setRepeat(!isRepeatSong );
+                btnRepeat.setBackgroundResource(R.drawable.custom_action_repeat);
+            }
+
         }
 
     }

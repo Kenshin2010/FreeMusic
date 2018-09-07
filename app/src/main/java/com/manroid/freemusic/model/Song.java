@@ -3,6 +3,7 @@ package com.manroid.freemusic.model;
 import com.manroid.freemusic.view.activity.MainActivity;
 
 import java.util.List;
+import java.util.Random;
 
 public class Song {
 
@@ -39,5 +40,10 @@ public class Song {
         } else {
             return null;
         }
+    }
+
+    public Song getRandom(Random random) {
+        List<Song> songs = MainActivity.getListSong();
+        return songs.get(random.nextInt(songs.size()));
     }
 }

@@ -8,4 +8,17 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="notificationButton">
+        <item name="android:layout_width">@dimen/notificationButtonsSize</item>
+        <item name="android:layout_height">@dimen/notificationButtonsSize</item>
+        <item name="android:scaleType">fitXY</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:padding">@dimen/notificationButtonsPadding</item>
+    </style>
+
+    <style name="notificationQuitButton" parent="notificationButton">
+        <item name="android:layout_width">@dimen/notificationQuitButtonSize</item>
+        <item name="android:layout_height">@dimen/notificationQuitButtonSize</item>
+    </style>
+
 </resources>
